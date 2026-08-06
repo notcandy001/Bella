@@ -1,0 +1,17 @@
+[package]
+name = "ultron-core"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "ultrond"
+path = "src/main.rs"
+
+[dependencies]
+ultron-common = { path = "../ultron-common" }
+ultron-permissions = { path = "../ultron-permissions" }
+async-trait.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true

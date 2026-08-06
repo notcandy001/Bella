@@ -1,0 +1,13 @@
+[package]
+name = "ultron-permissions"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ultron-common = { path = "../ultron-common" }
+serde.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
