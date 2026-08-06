@@ -1,10 +1,10 @@
 [package]
-name = "ultron-permissions"
+name = "bella-permissions"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
-ultron-common = { path = "../ultron-common" }
+bella-common = { path = "../bella-common" }
 serde.workspace = true
 tokio.workspace = true
 tracing.workspace = true

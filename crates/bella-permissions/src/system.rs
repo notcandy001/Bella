@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
-use ultron_common::{UltronError, UltronResult};
+use bella_common::{BellaError, BellaResult};
 
 fn now_unix() -> u64 {
     SystemTime::now()
@@ -65,7 +65,7 @@ impl PermissionSystem {
     /// Every call, allowed or denied, is recorded to the audit trail —
     /// this function is the single choke point the audit log design in
     /// Phase 1 depends on.
-    pub async fn check(&self, grantee: &Grantee, requested: &Capability) -> UltronResult<()> {
+    pub async fn check(&self, grantee: &Grantee, requested: &Capability) -> BellaResult<()> {
         let now = now_unix();
         let grants = self.grants.read().await;
 
@@ -104,7 +104,7 @@ impl PermissionSystem {
 
         match decision {
             AuditDecision::Allowed => Ok(()),
-            _ => Err(UltronError::PermissionDenied(requested.to_string())),
+            _ => Err(BellaError::PermissionDenied(requested.to_string())),
         }
     }
 
@@ -124,14 +124,14 @@ impl Default for PermissionSystem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ultron_common::SubsystemId;
+    use bella_common::SubsystemId;
 
     #[tokio::test]
     async fn ungranted_capability_is_denied_and_audited() {
         let perms = PermissionSystem::new();
         let grantee = Grantee::Subsystem(SubsystemId::Voice);
         let result = perms.check(&grantee, &Capability::Microphone).await;
-        assert!(matches!(result, Err(UltronError::PermissionDenied(_))));
+        assert!(matches!(result, Err(BellaError::PermissionDenied(_))));
 
         let log = perms.audit_log().await;
         assert_eq!(log.len(), 1);

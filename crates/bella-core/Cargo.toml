@@ -1,15 +1,16 @@
 [package]
-name = "ultron-core"
+name = "bella-core"
 version.workspace = true
 edition.workspace = true
 
 [[bin]]
-name = "ultrond"
+name = "bellad"
 path = "src/main.rs"
 
 [dependencies]
-ultron-common = { path = "../ultron-common" }
-ultron-permissions = { path = "../ultron-permissions" }
+bella-common = { path = "../bella-common" }
+bella-permissions = { path = "../bella-permissions" }
+bella-memory = { path = "../bella-memory" }
 async-trait.workspace = true
 tokio.workspace = true
 tracing.workspace = true

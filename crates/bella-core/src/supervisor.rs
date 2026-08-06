@@ -2,7 +2,7 @@ use crate::subsystem_trait::Subsystem;
 use std::time::Duration;
 use tokio::sync::watch;
 use tracing::{error, info, warn};
-use ultron_common::MessageBus;
+use bella_common::MessageBus;
 
 /// How many times a subsystem may crash before the supervisor gives up on
 /// it, rather than restart-looping forever and burning CPU on a subsystem
@@ -70,7 +70,7 @@ impl Supervisor {
                 info!(subsystem = %id, attempt = restarts, "starting subsystem");
 
                 let task_bus = bus.clone();
-                let run_result: Result<ultron_common::UltronResult<()>, tokio::task::JoinError> =
+                let run_result: Result<bella_common::BellaResult<()>, tokio::task::JoinError> =
                     tokio::spawn(async move { instance.run(task_bus, rx).await }).await;
 
                 bus.deregister(id).await;

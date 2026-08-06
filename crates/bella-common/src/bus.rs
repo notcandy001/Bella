@@ -1,4 +1,4 @@
-use crate::error::{UltronError, UltronResult};
+use crate::error::{BellaError, BellaResult};
 use crate::message::Envelope;
 use crate::subsystem::SubsystemId;
 use std::collections::HashMap;
@@ -45,20 +45,20 @@ impl MessageBus {
     /// respect to correctness: if the inbox is full this returns
     /// ChannelFull rather than deadlocking the caller, so a slow
     /// subsystem degrades gracefully instead of stalling the whole daemon.
-    pub async fn send(&self, envelope: Envelope) -> UltronResult<()> {
+    pub async fn send(&self, envelope: Envelope) -> BellaResult<()> {
         let dest = envelope.destination;
         let senders = self.senders.read().await;
         let tx = senders
             .get(&dest)
-            .ok_or_else(|| UltronError::SubsystemNotFound(dest.to_string()))?;
+            .ok_or_else(|| BellaError::SubsystemNotFound(dest.to_string()))?;
 
         match tx.try_send(envelope) {
             Ok(()) => Ok(()),
             Err(mpsc::error::TrySendError::Full(_)) => {
-                Err(UltronError::ChannelFull(dest.to_string()))
+                Err(BellaError::ChannelFull(dest.to_string()))
             }
             Err(mpsc::error::TrySendError::Closed(_)) => {
-                Err(UltronError::ChannelClosed(dest.to_string()))
+                Err(BellaError::ChannelClosed(dest.to_string()))
             }
         }
     }
@@ -123,7 +123,7 @@ mod tests {
             Payload::Lifecycle(crate::message::LifecycleEvent::Started),
         );
         let result = bus.send(envelope).await;
-        assert!(matches!(result, Err(UltronError::SubsystemNotFound(_))));
+        assert!(matches!(result, Err(BellaError::SubsystemNotFound(_))));
     }
 
     #[tokio::test]
@@ -140,7 +140,7 @@ mod tests {
             );
             last_result = bus.send(envelope).await;
         }
-        assert!(matches!(last_result, Err(UltronError::ChannelFull(_))));
+        assert!(matches!(last_result, Err(BellaError::ChannelFull(_))));
     }
 
     #[tokio::test]

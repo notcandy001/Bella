@@ -4,7 +4,7 @@ use thiserror::Error;
 /// (or wraps it) so the Action Router and supervisor can reason about
 /// failures uniformly instead of every module inventing its own error type.
 #[derive(Debug, Error)]
-pub enum UltronError {
+pub enum BellaError {
     #[error("permission denied: capability '{0}' was not granted")]
     PermissionDenied(String),
 
@@ -24,4 +24,4 @@ pub enum UltronError {
     Internal(String),
 }
 
-pub type UltronResult<T> = Result<T, UltronError>;
+pub type BellaResult<T> = Result<T, BellaError>;

@@ -1,5 +1,5 @@
 use crate::capability::Capability;
-use ultron_common::SubsystemId;
+use bella_common::SubsystemId;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Who a capability was granted to. Subsystems and plugins are both

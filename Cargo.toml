@@ -1,9 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/ultron-common",
-    "crates/ultron-permissions",
-    "crates/ultron-core",
+    "crates/bella-common",
+    "crates/bella-permissions",
+    "crates/bella-memory",
+    "crates/bella-core",
 ]
 
 [workspace.package]
@@ -19,3 +20,4 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "=1.8.0", features = ["v4", "serde"] }
 async-trait = "0.1"
+rusqlite = { version = "0.31", features = ["bundled"] }

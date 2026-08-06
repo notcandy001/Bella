@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use tokio::sync::mpsc;
-use ultron_common::{Envelope, MessageBus, SubsystemId, UltronResult};
+use bella_common::{Envelope, MessageBus, SubsystemId, BellaResult};
 
 /// The interface every subsystem (Voice, Vision, Memory, Reasoning, ...)
 /// implements. This is the Rust-trait realization of Phase 2's "every
@@ -16,5 +16,5 @@ pub trait Subsystem: Send + 'static {
     /// `rx.recv()` and return only on a genuine, unrecoverable failure or
     /// a clean shutdown request — the supervisor treats any `Err` return
     /// (and any panic) as a signal to restart this subsystem.
-    async fn run(&mut self, bus: MessageBus, rx: mpsc::Receiver<Envelope>) -> UltronResult<()>;
+    async fn run(&mut self, bus: MessageBus, rx: mpsc::Receiver<Envelope>) -> BellaResult<()>;
 }

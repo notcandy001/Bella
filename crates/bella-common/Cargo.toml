@@ -1,5 +1,5 @@
 [package]
-name = "ultron-common"
+name = "bella-common"
 version.workspace = true
 edition.workspace = true
 

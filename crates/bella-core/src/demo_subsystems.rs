@@ -8,8 +8,9 @@ use crate::subsystem_trait::Subsystem;
 use async_trait::async_trait;
 use tokio::sync::mpsc;
 use tracing::info;
-use ultron_common::{Envelope, LifecycleEvent, MessageBus, Payload, SubsystemId, UltronResult};
-use ultron_permissions::{Capability, Grantee, PermissionSystem};
+use bella_common::{Envelope, LifecycleEvent, MessageBus, Payload, SubsystemId, BellaResult};
+use bella_memory::{MemoryEngine, NewEpisode};
+use bella_permissions::{Capability, Grantee, PermissionSystem};
 
 /// Stands in for the Voice subsystem: on receiving a `UserUtterance`, it
 /// checks (via the real Permission System) that it's allowed to use the
@@ -36,7 +37,7 @@ impl Subsystem for DemoVoiceSubsystem {
         SubsystemId::Voice
     }
 
-    async fn run(&mut self, bus: MessageBus, mut rx: mpsc::Receiver<Envelope>) -> UltronResult<()> {
+    async fn run(&mut self, bus: MessageBus, mut rx: mpsc::Receiver<Envelope>) -> BellaResult<()> {
         while let Some(envelope) = rx.recv().await {
             match envelope.payload {
                 Payload::UserUtterance { text } => {
@@ -72,10 +73,20 @@ impl Subsystem for DemoVoiceSubsystem {
     }
 }
 
-/// Stands in for the Context Builder: receives assembled context, logs it.
-/// A real implementation would fold in Memory Engine results before
-/// forwarding to the Reasoning Engine (Phase 5's next real deliverable).
-pub struct DemoContextSubsystem;
+/// Stands in for the Context Builder: receives assembled context, records
+/// it as an episode in the real Memory Engine, then recalls recent
+/// episodes to demonstrate that memory persists across interactions —
+/// this is the Phase 8 "episodic memory" deliverable actually wired into
+/// the Phase 2 data flow, not a mock.
+pub struct DemoContextSubsystem {
+    memory: MemoryEngine,
+}
+
+impl DemoContextSubsystem {
+    pub fn new(memory: MemoryEngine) -> Self {
+        Self { memory }
+    }
+}
 
 #[async_trait]
 impl Subsystem for DemoContextSubsystem {
@@ -83,15 +94,48 @@ impl Subsystem for DemoContextSubsystem {
         SubsystemId::Context
     }
 
-    async fn run(&mut self, _bus: MessageBus, mut rx: mpsc::Receiver<Envelope>) -> UltronResult<()> {
+    async fn run(&mut self, _bus: MessageBus, mut rx: mpsc::Receiver<Envelope>) -> BellaResult<()> {
         while let Some(envelope) = rx.recv().await {
             match envelope.payload {
                 Payload::AssembledContext { context_json } => {
-                    info!(
-                        correlation_id = %envelope.correlation_id,
-                        context = %context_json,
-                        "context: received assembled context"
-                    );
+                    let recorded = self
+                        .memory
+                        .record(NewEpisode {
+                            correlation_id: envelope.correlation_id,
+                            content: context_json.clone(),
+                            kind: "assembled_context".to_string(),
+                        })
+                        .await;
+
+                    match recorded {
+                        Ok(episode) => {
+                            info!(
+                                correlation_id = %envelope.correlation_id,
+                                episode_id = %episode.id,
+                                context = %context_json,
+                                "context: received and persisted assembled context"
+                            );
+                        }
+                        Err(e) => {
+                            info!(error = %e, "context: failed to persist episode to memory");
+                        }
+                    }
+
+                    match self.memory.recent(3).await {
+                        Ok(recent) => {
+                            for ep in recent {
+                                info!(
+                                    episode_id = %ep.id,
+                                    kind = %ep.kind,
+                                    content = %ep.content,
+                                    "context: recalled recent episode from memory"
+                                );
+                            }
+                        }
+                        Err(e) => {
+                            info!(error = %e, "context: failed to recall recent episodes");
+                        }
+                    }
                 }
                 Payload::Lifecycle(LifecycleEvent::ShuttingDown) => {
                     info!("context: shutdown requested, exiting run loop");
